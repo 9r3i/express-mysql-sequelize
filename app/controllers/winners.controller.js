@@ -21,7 +21,7 @@ exports.create = (req, res) => {
   /* create a winner object */
   const winner = {
     athlete: req.body.athlete,
-    date: req.body.date && req.body.date.match(/^\d{4}-\d{2}-\d{2}$/) 
+    date: req.body.date && req.body.date.match(/^\d{4}-\d{2}-\d{2}$/)
           ? req.body.date : '1970-01-01',
     country_group: req.body.country_group
                    && req.body.country_group.match(/^[A-Z]$/)
@@ -61,7 +61,7 @@ exports.create = (req, res) => {
 exports.findAll = (req, res) => {
   /* default ordering */
   const orderingDefault = [[ 'id', 'ASC' ]];
-  const ordering = req.body.sortModel.length>0
+  const ordering = req.body.sortModel && req.body.sortModel.length>0
     ? req.body.sortModel.map(a=>{
       const cols = a.colId.split('.');
       cols.push(a.sort.toUpperCase());
@@ -70,14 +70,14 @@ exports.findAll = (req, res) => {
     : orderingDefault;
   /* wherance for countries */
   var countryValues = false;
-  if(req.body.filterModel.hasOwnProperty('country.name')){
+  if(req.body.filterModel && req.body.filterModel.hasOwnProperty('country.name')){
     countryValues = req.body.filterModel['country.name'].values;
   }
   const countryWhere = countryValues ? {name: countryValues} : {};
   /* wherance conditions for winners */
   const whereDef = {};
   var whereVar = false;
-  if(req.body.filterModel.year){
+  if(req.body.filterModel && req.body.filterModel.year){
     const fyear = req.body.filterModel.year;
     if(fyear.operator=='OR'&&fyear.filterType=='number'){
       whereVar = {
@@ -198,7 +198,7 @@ exports.update = (req, res) => {
   /* create a winner object */
   const winner = {
     athlete: req.body.athlete,
-    date: req.body.date && req.body.date.match(/^\d{4}-\d{2}-\d{2}$/) 
+    date: req.body.date && req.body.date.match(/^\d{4}-\d{2}-\d{2}$/)
           ? req.body.date : '1970-01-01',
     country_group: req.body.country_group
                    && req.body.country_group.match(/^[A-Z]$/)

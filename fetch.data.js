@@ -2,7 +2,7 @@
 async function fetchData(url = '', data={}, method='GET'){
   const baseURL = 'http://localhost:3000/api/winners';
   /* default options are marked with */
-  const response = await fetch(url, {
+  const response = await fetch(baseURL+url, {
     /* GET, POST, PUT, DELETE */
     method: method,
     /* no-cors, *cors, same-origin */
@@ -21,7 +21,7 @@ async function fetchData(url = '', data={}, method='GET'){
     /* no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url */
     referrerPolicy: 'no-referrer',
     /* stringify data (for Content-Type: application/json only) */
-    body: JSON.stringify(data)
+    body: method == 'GET' || method == 'DELETE' ? null : JSON.stringify(data)
   });
   /* return the parsed json (object) */
   return response.json();

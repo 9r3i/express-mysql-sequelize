@@ -40,7 +40,7 @@ So, base API URL is ```http://localhost:3000/api/winners```
 
 # Preparation
 
-First thing first, read file mysql-preparation.txt for preparing mysql databse.
+First thing first, read file [mysql-preparation.txt](mysql-preparation.txt) for preparing mysql databse.
 
 Testing preparation for client, using curl cli or using javascript fetch.
 First, install curl for cli in terminal (debian/ubuntu/mint):
@@ -54,7 +54,7 @@ And for javascript, we will prepare a fetching function with profer headers.
 async function fetchData(url = '', data={}, method='GET'){
   const baseURL = 'http://localhost:3000/api/winners';
   /* default options are marked with */
-  const response = await fetch(url, {
+  const response = await fetch(baseURL+url, {
     /* GET, POST, PUT, DELETE */
     method: method,
     /* no-cors, *cors, same-origin */
@@ -73,7 +73,7 @@ async function fetchData(url = '', data={}, method='GET'){
     /* no-referrer, *no-referrer-when-downgrade, origin, origin-when-cross-origin, same-origin, strict-origin, strict-origin-when-cross-origin, unsafe-url */
     referrerPolicy: 'no-referrer',
     /* stringify data (for Content-Type: application/json only) */
-    body: JSON.stringify(data)
+    body: method == 'GET' || method == 'DELETE' ? null : JSON.stringify(data)
   });
   /* return the parsed json (object) */
   return response.json();
@@ -96,7 +96,7 @@ With request method ```GET```.
 
 Example fetch of row id 39:
 ```
-$ curl -X GET -d 'http://localhost:3000/api/winners/39'
+$ curl 'http://localhost:3000/api/winners/39'
 ```
 or using javascript fetch
 ```js
@@ -105,16 +105,6 @@ const response = await fetchData('/39');
 
 
 # Read multiple data
-
-- request path: ```/all```
-- request method: ```GET```
-- request data: NO
-
-
-...
-
-
-# Read multiple data [POST]
 
 - request path: ```/all```
 - request method: ```POST```
@@ -131,18 +121,12 @@ Use path ```/all``` with method ```POST``` and some data request variable:
 Example fetch multiple data with pagination,
 - start with row 100
 - end with row 200
-```
-$ curl -X POST -d \
-    '{"startRow":100,"endRow":200,"filterModel":{},"sortModel":[]}' \
-    'http://localhost:3000/api/winners/all'
-```
-or using javascript fetch
 ```js
 const response = await fetchData('/all',{
-  startRow:100,
-  endRow:200,
-  filterModel:{},
-  sortModel:[]
+  startRow: 100,
+  endRow: 200,
+  filterModel: {},
+  sortModel: []
 },'POST');
 ```
 
@@ -151,23 +135,12 @@ We'll add sortModel arguments, it will be like:
 - colId, string of column name, like: id
 
 Example:
-```
-$ curl -X POST -d \
-    '{"startRow":100,"endRow":200,"filterModel":{},"sortModel":[
-      {
-        "sort": "DESC",
-        "colId": "id"
-      }
-    ]}' \
-    'http://localhost:3000/api/winners/all'
-```
-or using javascript fetch
 ```js
 const response = await fetchData('/all',{
-  startRow:100,
-  endRow:200,
-  filterModel:{},
-  sortModel:[
+  startRow: 100,
+  endRow: 200,
+  filterModel: {},
+  sortModel: [
     {
       sort: "DESC",
       colId: "id"
@@ -176,9 +149,63 @@ const response = await fetchData('/all',{
 },'POST');
 ```
 
+Now we try filterModel, to filter a column:
+- filterType, string of type of filter, number or date
+- type, string of type of wherance:
+      - equals, notEqual, inRange (between)
+      - lessThan, lessThanOrEqual
+      - greaterThan, greaterThanOrEqual
+- filter, mixed of first filter
+- filterTo, mixed of second filter
 
-... sortModel (upside ...)
-... filterModel
+Example:
+```js
+const response = await fetchData('/all',{
+  startRow: 100,
+  endRow: 200,
+  filterModel: {
+    "year": {
+      "filterType": "number",
+      "type": "inRange",
+      "filter": 2002,
+      "filterTo": 2004
+    }
+  },
+  sortModel: []
+},'POST');
+```
+
+And also filter with two conditions,
+- filterType, string of type of filter, value: number or date
+- operator, string of query operator, the value between OR and AND
+- condition1, object of first condition that explained in latest example.
+- condition2, object of second condition that explained in latest example.
+
+Take a look of this example:
+```js
+const response = await fetchData('/all',{
+  startRow: 100,
+  endRow: 200,
+  filterModel: {
+    "year": {
+      "filterType": "number",
+      "operator": "AND",
+      "condition1": {
+        "filterType": "number",
+        "type": "inRange",
+        "filter": 2002,
+        "filterTo": 2004
+      },
+      "condition2": {
+        "filterType": "number",
+        "type": "equals",
+        "filter": 2010
+      }
+    }
+  },
+  sortModel: []
+},'POST');
+```
 
 
 # Create/Insert data
@@ -187,20 +214,21 @@ const response = await fetchData('/all',{
 - request method: ```POST```
 - request data: YES
 
-Create or Insert data use path ```/``` with method ```POST``` and also with request data.
+Create or Insert data use path ```/``` with method ```POST``` and also with data request.
 
 Example:
-```
-$ curl -X POST -d \
-    '{"athlete":"Ronaldo Esteban","age":30,"year":2013,"date":"2013-08-06"}' \
-    'http://localhost:3000/api/winners/'
-```
-or using javascript fetch
 ```js
 const response = await fetchData('/',{
-  athlete:"Ronaldo Esteban",
-  age:30,
-  year:2013,
+  athlete: "Ronaldo Esteban",
+  age: 30,
+  year: 2013,
+  gold: 1,
+  silver: 0,
+  bronze: 0,
+  total: 1,
+  sportId: 24,
+  countryId: 103,
+  country_group: "U",
   date:'2013-08-06'
 },'POST');
 ```
@@ -212,9 +240,24 @@ const response = await fetchData('/',{
 - request method: ```PUT```
 - request data: YES
 
-Update request is using path ```/:id``` with ```PUT``` method, and also with request data.
+Update request is using path ```/:id``` with ```PUT``` method, and also with data request.
 
-...
+Example:
+```js
+const response = await fetchData('/8002',{
+  athlete: "Ronaldo Esteban",
+  age: 31,
+  year: 2013,
+  gold: 1,
+  silver: 2,
+  bronze: 0,
+  total: 3,
+  sportId: 24,
+  countryId: 103,
+  country_group: "U",
+  date:'2013-08-06'
+},'PUT');
+```
 
 
 # Delete a single data
@@ -223,7 +266,12 @@ Update request is using path ```/:id``` with ```PUT``` method, and also with req
 - request method: ```DELETE```
 - request data: NO
 
-...
+Delete a single row by id, using path ```/:id``` with ```DELETE``` method.
+
+Example:
+```js
+const response = await fetchData('/8003',{},'DELETE');
+```
 
 
 # Delete all data
@@ -232,4 +280,19 @@ Update request is using path ```/:id``` with ```PUT``` method, and also with req
 - request method: ```DELETE```
 - request data: NO
 
-...
+This the worst code i wrote, wipe all the way table but not truncate.
+
+Example:
+```js
+const response = await fetchData('/',{},'DELETE');
+```
+
+
+# Closing
+
+I wish this repository will be very helpful for all people who needs it.
+
+--
+
+
+=============================== end-of-the-line ===============================
