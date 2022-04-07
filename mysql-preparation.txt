@@ -1,0 +1,26 @@
+
+MySQL Preparation
+
+Install mysql or mariadb
+
+$ sudo apt install mysql
+$ sudo apt install mariadb
+
+$ sudo mysql -u root -p
+
+Execute this queries
+
+use mysql;
+CREATE DATABASE athlete;
+CREATE USER 'test'@'localhost' IDENTIFIED BY 'test';
+ALTER USER 'test'@'localhost' IDENTIFIED WITH mysql_native_password BY 'test';
+GRANT CREATE, ALTER, DROP, INSERT, UPDATE, DELETE, SELECT on athlete.olympic_winners TO 'test'@'localhost' WITH GRANT OPTION;
+exit
+
+Import file olympic_winners.sql to database athlete
+
+$ mysql -u username -p athlete < olympic_winners.sql
+
+Then restart the service
+
+$ sudo service mysql restart
